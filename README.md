@@ -3,14 +3,14 @@ Using R-trees to store and query faces.
 
 installation: 
 
-download libspatialindex from http://libspatialindex.github.io/#download
+    download libspatialindex from http://libspatialindex.github.io/#download
 
-download Rtree from https://pypi.python.org/pypi/Rtree/
+    download Rtree from https://pypi.python.org/pypi/Rtree/
 
-cd libspatialindex-src-1.8.5
+    cd libspatialindex-src-1.8.5
 
-./configure; make; make install
+    ./configure; make; make install
 
-cd Rtree-0.8.2
+    cd Rtree-0.8.2
 
-python setup.py install
+    python setup.py install
