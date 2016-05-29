@@ -1,6 +1,6 @@
 import hilbert
 import math 
-
+import Queue
 
 def minimumSpanningRectangle(coords):
 	ll = list(coords[0])
@@ -109,7 +109,31 @@ class StaticHilbertR(object):
 	def pointSearch(self, point):
 		if rectContainsPoint((self.root.ll, self.root.ur), point):
 			return self.pointSearchRec(point, self.root)
-		return [] 
+		return []
+        
+	# incremental nearest neighbor search as in R tree book, p.60.
+	def kNearestNeighbors(self, point, k):
+		result = [] 
+		q = Queue.PriorityQueue() # put(item, priority), lower priority is dequeued first
+		for child in self.root.children:
+			q.put(child, 0)
+		while not q.empty():
+			element = q.get()
+			if type(element) == LeafNode:
+				for elem in element.keyCoords:
+					q.put(elem, dist(point, elem))
+			elif type(element) == InternalNode:
+				for child in element.children:
+					q.put(child, mindist(point, (child.ll, child.ur)))
+			else: # element is a (ll, ur)
+				curdist = dist(point, element)
+				curMinDist = mindist(point, q.queue[0]) if type(q.queue[0]) == InternalNode else dist(point, q.queue[0])
+				# if its distance is greater than the current smallest distance in the pq
+				if (not q.empty()) and (curMinDist < curdist):
+					q.put(elem, curdist)
+				else:
+					result.append(element)
+					if len(result) >= k: return result
     
 	#prints trees of height 2 or 3
 	def printTree(self):
@@ -124,9 +148,28 @@ class StaticHilbertR(object):
 
 # TODO only search possible rects 
 
+# minmum distance btween a point an a rectangle as in 4.3.1 on p56
+def mindist(point, rectangle):
+	result = 0
+	for i in range(len(point)):
+		qi = point[i]
+		si = rectangle[0][i]
+		ti = rectangle[1][i]
+		ri = qi
+		if qi < si: ri = si
+		elif qi > ti: ri = ti
+		result += (qi - ri)**2
+	return result
+
+# squared euclidean distance
+def dist(p1, p2):
+	return sum([(p1[i] - p2[i])**2 for i in range(len(p1))])
 
 coords = [(1,2,3),(2,3,4),(3,4,5),(5,6,7),(6,7,8),(7,8,9),(9,10,11),(10,11,12)]
 t = StaticHilbertR(coords, 2)
+print t.kNearestNeighbors((5,6,7),2)
+print t.kNearestNeighbors((5,6,6),3)
+print t.kNearestNeighbors((1,2,3),4)
 print t.rangeSearch(((1,2,3),(5,6,7)))
 print t.pointSearch((1,2,3))
 t.printTree()
