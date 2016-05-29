@@ -37,7 +37,7 @@ def mindist(point, rect):
 		ri = qi
 		if qi < si: ri = si
 		if qi > ti: ri = ti
-		result += (qi - ri)**2
+		result = result + (abs(qi - ri))**2
 	return result
 
 # squared euclidean distance
@@ -129,7 +129,7 @@ class StaticHilbertR(object):
 		q = Queue.PriorityQueue() # put(item, priority), lower priority is dequeued first
 		for child in self.root.children:
 			print 'enqueue roots child mindist: ', mindist(point,child.msr)
-			q.put((mindist(point, child.msr), child)) # or priority 0?
+			q.put((0, child)) # or priority 0?
 		while not q.empty():
 			element = q.get()[1]
 			if type(element) == LeafNode:
@@ -147,7 +147,6 @@ class StaticHilbertR(object):
 				curdist = dist(point, element)
 				curMinDist = 0
 				print 'top of queue:', q.queue[0]
-				print type(q.queue[0][1])
 				if type(q.queue[0][1]) == InternalNode:
 					print 'use mindist'
 					curMinDist = mindist(point, q.queue[0][1].msr)
@@ -160,12 +159,48 @@ class StaticHilbertR(object):
 				if (not q.empty()) and (curMinDist < curdist):
 					q.put((curdist, elem))
 				else:
+					print 'output obj with dist ', curdist
 					result.append(element)
 					if len(result) >= k: return result
     
 
 tf1 = StaticHilbertR(coords[:100],3)
-tf1.kNearestNeighbors(coords[0], 3) # issue: does NOT give back coords[0] as a nearest neigbor of itself
+res = tf1.kNearestNeighbors(coords[0], 10) 
+
+# that 7907051 is outputted because it has lower priority that the top of the queue
+# even though in the future there will be lower priority things 
+
+0
+7907051
+8512267
+7295715
+7297649
+7479822
+7290006
+7520534
+8480316
+7489095
+
+# clearly some leafnode has higher mindist than each of its children.
+# this should not happen, its either becaues msr is wrong or mindist is wrong.
+#  leaf = tf1.root.children[0].children[0].children[0].children[2]
+# the msr does contain each f its children; probably mindist is wrong, mindist should be 
+# 7290006 instead
+dequeued leafnode  135 with dist  10633038
+enqueue leafnode key 329  dist:  8480316
+enqueue leafnode key 317  dist:  7290006
+enqueue leafnode key 135  dist:  7520534
+
+for child in tf1.root.children:
+	print 'child', mindist(coords[0], child.msr)
+	for grandchild in child.children:
+		print 'grandchild', mindist(coords[0], grandchild.msr)
+		for ggrandchild in grandchild.children:
+			print 'ggrandchild', mindist(coords[0], ggrandchild.msr)
+			for leaf in ggrandchild.children:
+				print 'leaf', mindist(coords[0], leaf.msr)
+				if mindist(coords[0], leaf.msr) == 10633038:
+					break
 
 	#prints trees of height 2 or 3 best
 	def printTree(self):
