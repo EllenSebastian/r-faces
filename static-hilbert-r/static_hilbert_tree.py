@@ -32,11 +32,9 @@ def mindist(point, rect):
 	result = 0
 	for i in range(len(point)):
 		qi = point[i]
-		si = rect[0][i]
-		ti = rect[0][i]
 		ri = qi
-		if qi < si: ri = si
-		if qi > ti: ri = ti
+		if qi < rect[0][i]: ri = rect[0][i]
+		if qi > rect[1][i]: ri = rect[1][i]
 		result = result + (abs(qi - ri))**2
 	return result
 
@@ -128,80 +126,22 @@ class StaticHilbertR(object):
 		result = [] 
 		q = Queue.PriorityQueue() # put(item, priority), lower priority is dequeued first
 		for child in self.root.children:
-			print 'enqueue roots child mindist: ', mindist(point,child.msr)
 			q.put((0, child)) # or priority 0?
 		while not q.empty():
-			element = q.get()[1]
+			curdist, element = q.get()
 			if type(element) == LeafNode:
-				print 'dequeued leafnode ', element.msr[0][0], 'with dist ', mindist(point, element.msr)
 				for elem in element.keyCoords:
-					print 'enqueue leafnode key',elem[0],' dist: ', dist(point, elem)
 					q.put((dist(point, elem), elem))
 			elif type(element) == InternalNode:
-				print 'dequeued internalnode', element.msr[0][0], 'with dist ', mindist(point, element.msr)
 				for child in element.children:
-					print 'enqueue internalnode child',child.msr[0][0],' dist: ', mindist(point, child.msr)
 					q.put((mindist(point, child.msr), child))
 			else: # element is a (ll, ur)
-				print 'dequeued obj', element[0], 'with dist ', dist(point, element)
-				curdist = dist(point, element)
-				curMinDist = 0
-				print 'top of queue:', q.queue[0]
-				if type(q.queue[0][1]) == InternalNode:
-					print 'use mindist'
-					curMinDist = mindist(point, q.queue[0][1].msr)
-				elif type(q.queue[0][1]) == LeafNode:
-					curMinDist = mindist(point, q.queue[0][1].msr)
-					print 'dist: ', curMinDist
-				else:
-					curMinDist = dist(point, q.queue[0][1])
-				# if its distance is greater than the current smallest distance in the pq
-				if (not q.empty()) and (curMinDist < curdist):
+				if (not q.empty()) and (q.queue[0][0] < curdist):
 					q.put((curdist, elem))
 				else:
-					print 'output obj with dist ', curdist
 					result.append(element)
 					if len(result) >= k: return result
     
-
-tf1 = StaticHilbertR(coords[:100],3)
-res = tf1.kNearestNeighbors(coords[0], 10) 
-
-# that 7907051 is outputted because it has lower priority that the top of the queue
-# even though in the future there will be lower priority things 
-
-0
-7907051
-8512267
-7295715
-7297649
-7479822
-7290006
-7520534
-8480316
-7489095
-
-# clearly some leafnode has higher mindist than each of its children.
-# this should not happen, its either becaues msr is wrong or mindist is wrong.
-#  leaf = tf1.root.children[0].children[0].children[0].children[2]
-# the msr does contain each f its children; probably mindist is wrong, mindist should be 
-# 7290006 instead
-dequeued leafnode  135 with dist  10633038
-enqueue leafnode key 329  dist:  8480316
-enqueue leafnode key 317  dist:  7290006
-enqueue leafnode key 135  dist:  7520534
-
-for child in tf1.root.children:
-	print 'child', mindist(coords[0], child.msr)
-	for grandchild in child.children:
-		print 'grandchild', mindist(coords[0], grandchild.msr)
-		for ggrandchild in grandchild.children:
-			print 'ggrandchild', mindist(coords[0], ggrandchild.msr)
-			for leaf in ggrandchild.children:
-				print 'leaf', mindist(coords[0], leaf.msr)
-				if mindist(coords[0], leaf.msr) == 10633038:
-					break
-
 	#prints trees of height 2 or 3 best
 	def printTree(self):
 		if self.height < 3:
@@ -212,34 +152,3 @@ for child in tf1.root.children:
 			print '                  ' + self.root.toString()
 			print '      ' + '             '.join([i.toString() for i in self.root.children])
 			print ' '.join([' '.join([i.toString() for i in j.children]) for j in self.root.children])
-
-
-coords = [(1,2,3),(2,3,4),(3,4,5),(5,6,7),(6,7,8),(7,8,9),(9,10,11),(10,11,12)]
-t = StaticHilbertR(coords, 2)
-print t.kNearestNeighbors((5,6,7),2)
-print t.kNearestNeighbors((5,6,6),3)
-print t.kNearestNeighbors((1,2,3),2)
-print t.rangeSearch(((1,2,3),(5,6,7)))
-print t.pointSearch((1,2,3))
-
-t = StaticHilbertR(coords, 3)
-print t.kNearestNeighbors((5,6,7),2)
-print t.kNearestNeighbors((5,6,6),3)
-print t.kNearestNeighbors((1,2,3),2)
-print t.rangeSearch(((1,2,3),(5,6,7)))
-print t.pointSearch((1,2,3))
-
-coords = [] 
-for line in open('../random_faces_50dim.csv'):
-	face = [int(i) for i in line.split(',')]
-	coords.append(tuple(face))
-
-tf = StaticHilbertR(coords, 3)
-tf.printTree()
-tf1 = StaticHilbertR(coords[:100],3)
-tf1.kNearestNeighbors(coords[0], 3) # issue: does NOT give back coords[0] as a nearest neigbor of itself
-# probably is a bug in mindist
-# pointsearch does give back coords[0]
-
-tf.kNearestNeighbors(tuple([1 for i in range(50)]), 4)
-t.printTree()
