@@ -27,12 +27,16 @@ def rectsIntersect(rect1, rect2):
 
 # minmum distance btween a point an a rectangle as in 4.3.1 on p56
 def mindist(point, rect):
+	# if rect contains point, then its 0.
+	if rectContainsPoint(rect, point): return 0
 	result = 0
 	for i in range(len(point)):
 		qi = point[i]
+		si = rect[0][i]
+		ti = rect[0][i]
 		ri = qi
-		if qi < rect[0][i]: ri = rect[0][i]
-		elif qi > rect[1][i]: ri = rect[1][i]
+		if qi < si: ri = si
+		if qi > ti: ri = ti
 		result += (qi - ri)**2
 	return result
 
@@ -41,8 +45,8 @@ def dist(p1, p2):
 	return sum([(p1[i] - p2[i])**2 for i in range(len(p1))])
 
 class LeafNode(object):
-	def __init__(self, keyCoords, keyIds = None, ll = None, ur = None,):
-		self.keyIds = keyIds
+	def __init__(self, keyCoords, keyAux = None, ll = None, ur = None,):
+		self.keyAux = keyAux
 		self.keyCoords = keyCoords
 		if ll is None or ur is None:
 			self.msr = minimumSpanningRectangle(keyCoords)
@@ -124,26 +128,46 @@ class StaticHilbertR(object):
 		result = [] 
 		q = Queue.PriorityQueue() # put(item, priority), lower priority is dequeued first
 		for child in self.root.children:
-			q.put(child, 0)
+			print 'enqueue roots child mindist: ', mindist(point,child.msr)
+			q.put((mindist(point, child.msr), child)) # or priority 0?
 		while not q.empty():
-			element = q.get()
+			element = q.get()[1]
 			if type(element) == LeafNode:
+				print 'dequeued leafnode ', element.msr[0][0], 'with dist ', mindist(point, element.msr)
 				for elem in element.keyCoords:
-					q.put(elem, dist(point, elem))
+					print 'enqueue leafnode key',elem[0],' dist: ', dist(point, elem)
+					q.put((dist(point, elem), elem))
 			elif type(element) == InternalNode:
+				print 'dequeued internalnode', element.msr[0][0], 'with dist ', mindist(point, element.msr)
 				for child in element.children:
-					q.put(child, mindist(point, child.msr))
+					print 'enqueue internalnode child',child.msr[0][0],' dist: ', mindist(point, child.msr)
+					q.put((mindist(point, child.msr), child))
 			else: # element is a (ll, ur)
+				print 'dequeued obj', element[0], 'with dist ', dist(point, element)
 				curdist = dist(point, element)
-				curMinDist = mindist(point, q.queue[0]) if type(q.queue[0]) == InternalNode else dist(point, q.queue[0])
+				curMinDist = 0
+				print 'top of queue:', q.queue[0]
+				print type(q.queue[0][1])
+				if type(q.queue[0][1]) == InternalNode:
+					print 'use mindist'
+					curMinDist = mindist(point, q.queue[0][1].msr)
+				elif type(q.queue[0][1]) == LeafNode:
+					curMinDist = mindist(point, q.queue[0][1].msr)
+					print 'dist: ', curMinDist
+				else:
+					curMinDist = dist(point, q.queue[0][1])
 				# if its distance is greater than the current smallest distance in the pq
 				if (not q.empty()) and (curMinDist < curdist):
-					q.put(elem, curdist)
+					q.put((curdist, elem))
 				else:
 					result.append(element)
 					if len(result) >= k: return result
     
-	#prints trees of height 2 or 3
+
+tf1 = StaticHilbertR(coords[:100],3)
+tf1.kNearestNeighbors(coords[0], 3) # issue: does NOT give back coords[0] as a nearest neigbor of itself
+
+	#prints trees of height 2 or 3 best
 	def printTree(self):
 		if self.height < 3:
 			print '        ' + self.root.toString()
@@ -162,4 +186,25 @@ print t.kNearestNeighbors((5,6,6),3)
 print t.kNearestNeighbors((1,2,3),2)
 print t.rangeSearch(((1,2,3),(5,6,7)))
 print t.pointSearch((1,2,3))
+
+t = StaticHilbertR(coords, 3)
+print t.kNearestNeighbors((5,6,7),2)
+print t.kNearestNeighbors((5,6,6),3)
+print t.kNearestNeighbors((1,2,3),2)
+print t.rangeSearch(((1,2,3),(5,6,7)))
+print t.pointSearch((1,2,3))
+
+coords = [] 
+for line in open('../random_faces_50dim.csv'):
+	face = [int(i) for i in line.split(',')]
+	coords.append(tuple(face))
+
+tf = StaticHilbertR(coords, 3)
+tf.printTree()
+tf1 = StaticHilbertR(coords[:100],3)
+tf1.kNearestNeighbors(coords[0], 3) # issue: does NOT give back coords[0] as a nearest neigbor of itself
+# probably is a bug in mindist
+# pointsearch does give back coords[0]
+
+tf.kNearestNeighbors(tuple([1 for i in range(50)]), 4)
 t.printTree()
