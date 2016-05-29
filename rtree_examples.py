@@ -32,6 +32,8 @@ for face in range(0,1000):
 	pcas = [random.randrange(0,1000) for i in range(0,50)]
 	f.write(','.join([str(i) for i in pcas]) + '\n')
 
+f.close()
+
 faces = [[int(i) for i in line.split(',')] for line in open(faces_file)]
 dim = len(faces[0])
 p = index.Property()
