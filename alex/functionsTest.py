@@ -56,17 +56,19 @@ def generateface2picsmapping(minimum_faces_per_person=1):
 		face2pics[y[i]][1].append(i)
 	return face2pics
 
-(X, X_nmf, y, nmf_components, min_faces_per_person, face2pics) = pickle.load(open( "nmfdata.p", "rb" ) )
+if __name__ == "__main__":
+	(X, X_nmf, y, nmf_components, min_faces_per_person, face2pics) = pickle.load(open( "nmfdata.p", "rb" ) )
 
-n_examples, n_features = X_nmf.shape
-print(X_nmf[0])
-i = Hilbert_to_int( float2IntVector(X_nmf[0] ))
-print(i)
-v2 = int2FloatVector(int_to_Hilbert( i, nD=n_features ))
-print(v2)
-i2 = Hilbert_to_int( float2IntVector(v2 ))
-print(i2)
-print('loss')
-print(i2-i)
+	n_examples, n_features = X_nmf.shape
+	print(X_nmf[0])
+	i = Hilbert_to_int( float2IntVector(X_nmf[0] ))
+	print(i)
+	v2 = int2FloatVector(int_to_Hilbert( i, nD=n_features ))
+	print(v2)
+	i2 = Hilbert_to_int( float2IntVector(v2 ))
+	print(i2)
+	print('loss')
+	print(i2-i)
+
 
 
