@@ -31,7 +31,7 @@ def plot_gallery(images, h, w, n_row=3, n_col=4):
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 t0 = time()
 
-lfw_people = fetch_lfw_people(min_faces_per_person=70, resize=0.4)
+lfw_people = fetch_lfw_people(min_faces_per_person=1, resize=0.4)
 n_samples, h, w = lfw_people.images.shape
 X, y = lfw_people.data, lfw_people.target
 n_examples, n_features = X.shape

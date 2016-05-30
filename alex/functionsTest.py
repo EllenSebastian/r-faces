@@ -2,6 +2,8 @@ import pickle
 import numpy as np
 from hilbert import gray_encode_travel, gray_decode_travel, child_start_end
 from hilbert import int_to_Hilbert, Hilbert_to_int
+from sklearn.datasets import fetch_lfw_people
+import matplotlib.pyplot as plt
 
 # Minimum bounding rectangle
 def MBR(datapoints):
@@ -20,8 +22,6 @@ def MBR(datapoints):
 def MBR2Centroid(datatuples):
 	return [int((tup[1]-tup[0])/2)  for tup in datatuples]
 
-(X, X_nmf, y, nmf_components, face2pics) = pickle.load(open( "nmfdata.p", "rb" ) )
-
 def float2IntVector(vector,precision = 10.0**20):
 	return [ int(elem*precision)  for elem in vector]
 def int2FloatVector(vector,precision = 10.0**20):
@@ -38,9 +38,25 @@ def recompose_from_eigenfaces(X_pca,eigenfaces):
 		for i in range(n_examples):
 			X_recomposed.append(sum([  X_pca[i,j]*eigenfaces[j] for j in range(n_components) ]))
 		return X_recomposed
-# int_to_Hilbert( i, nD )
-# def int_to_Hilbert( i, nD=2 ):  # Default is the 2D Hilbert walk.
-# def Hilbert_to_int( coords ):
+
+# A mapping from person to pictures that represent them
+# Returns [n_examples X ['name',[vector of pictures indices]]}
+
+# If needed...
+def generateface2picsmapping(minimum_faces_per_person=1):
+	lfw_people = fetch_lfw_people(min_faces_per_person=minimum_faces_per_person, resize=0.4)
+	n_samples, h, w = lfw_people.images.shape
+	X, y, target_names = lfw_people.data, lfw_people.target, lfw_people.target_names
+	n_examples, n_features = X.shape
+	face2pics = []
+	print(max(y))
+	for i in range((max(y)+1)):
+		face2pics.append([target_names[i],[] ])
+	for i in range(len(y)):
+		face2pics[y[i]][1].append(i)
+	return face2pics
+
+(X, X_nmf, y, nmf_components, min_faces_per_person, face2pics) = pickle.load(open( "nmfdata.p", "rb" ) )
 
 n_examples, n_features = X_nmf.shape
 print(X_nmf[0])
