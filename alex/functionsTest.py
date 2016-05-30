@@ -27,6 +27,17 @@ def float2IntVector(vector,precision = 10.0**20):
 def int2FloatVector(vector,precision = 10.0**20):
 	return [ (elem+0.0)/precision  for elem in vector]
 
+
+
+def recompose_from_eigenfaces(X_pca,eigenfaces):
+	if X_pca.ndim == 1:
+		return sum([  X_pca[j]*eigenfaces[j] for j in range(len(X_pca)) ])
+	else:
+		n_examples, n_components = X_pca.shape
+		X_recomposed = []
+		for i in range(n_examples):
+			X_recomposed.append(sum([  X_pca[i,j]*eigenfaces[j] for j in range(n_components) ]))
+		return X_recomposed
 # int_to_Hilbert( i, nD )
 # def int_to_Hilbert( i, nD=2 ):  # Default is the 2D Hilbert walk.
 # def Hilbert_to_int( coords ):
