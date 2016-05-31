@@ -52,10 +52,12 @@ def getRTree(coords):
 
 #faces = [[int(i) for i in line.split(',')] for line in open(faces_file)]
 #faces = pickle.load(open( "./faces.p", "rb" ) )
-faces = [float2IntVector(i) for i in X_nmf[:2000]]
+total = 2000
+interval = 200
+faces = [float2IntVector(i) for i in X_nmf[:total]]
 
 # TREE CREATION
-x_vals = [i for i in range(0,2200, 200)]
+x_vals = [i for i in range(0,total+interval, interval)]
 data1 = []
 data2 = []
 #for i in x_vals:
