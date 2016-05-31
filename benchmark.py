@@ -50,14 +50,23 @@ def getRTree(coords):
     t.rangeSearch = t.intersection
     return t
 
+def getRTree2():
+    dim = len(faces[0])
+    p = index.Property()
+    p.dimension = dim
+    t = index.Index(properties = p)
+    t.rangeSearch = t.intersection
+    return t
+
 #faces = [[int(i) for i in line.split(',')] for line in open(faces_file)]
 #faces = pickle.load(open( "./faces.p", "rb" ) )
 total = 2000
 interval = 200
 faces = [float2IntVector(i) for i in X_nmf[:total]]
 
-# TREE CREATION
-x_vals = [i for i in range(0,total+interval, interval)]
+#### BEGIN TREE CREATION ####
+
+x_vals = [1] + [i for i in range(interval,total+interval, interval)]
 data1 = []
 data2 = []
 #for i in x_vals:
@@ -67,17 +76,23 @@ data2 = []
 #    print '%s function took %0.3f ticks' % ("Intersection", (time2-time1))
 #    data1.append((time2-time1))
 
-for i in x_vals:
-    time1 = time.time()
-    getRTree(faces[:i])
-    time2 = time.time()
+for i in x_vals:   
+    faceIdx = getRTree2()
+    time1 = time.clock()
+    faces_new = faces[:i] # measure just the insertions
+    faceid = 0
+    for face in faces_new:
+        rectangle = tuple(face + face)
+        faceIdx.insert(faceid, rectangle, face)
+        faceid += 1
+    time2 = time.clock()
     print '%s function took %0.3f ticks' % ("Intersection", (time2-time1))
     data2.append((time2-time1))
 
 f, ax = plt.subplots()
 ax.set_ylabel('Time (Microseconds, CPU Time)')
 ax.set_xlabel('Number of Entries')
-title = 'Tree Creation Time vs Size (R Tree)'
+title = 'Tree Creation Time vs Size sdf'
 ax.set_title(title)
 
 # red dashes, blue squares
@@ -90,6 +105,8 @@ ax.legend(handles=[red_patch, blue_patch])
 pylab.savefig(title+'.png')
 plt.show()
 sys.exit()
+
+#### END TREE CREATION ####
 
 
 trees = {"static":getStaticHilbertTree(faces, 2), "regular":getRTree(faces)}
