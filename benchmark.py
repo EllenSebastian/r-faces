@@ -13,6 +13,7 @@ import numpy as np
 import pickle
 sys.path.insert(0, './alex')
 from functionsTest import float2IntVector as float2IntVector
+import matplotlib.patches as mpatches
 
 (X, X_nmf, y, nmf_components, min_faces_per_person, face2pics) = pickle.load(open( "./alex/nmfdata.p", "rb" ) )
 
@@ -46,45 +47,51 @@ def getStaticHilbertTree(coords, k):
 
 def getRTree(coords):
     t = createIndex(coords)
+    t.rangeSearch = t.intersection
     return t
 
 #faces = [[int(i) for i in line.split(',')] for line in open(faces_file)]
 #faces = pickle.load(open( "./faces.p", "rb" ) )
-faces = [float2IntVector(i) for i in X_nmf[:13000]]
+faces = [float2IntVector(i) for i in X_nmf[:2000]]
 
 # TREE CREATION
-#data = []
-#times = []
-#for i in range(0, 3):
+x_vals = [i for i in range(0,2200, 200)]
+data1 = []
+data2 = []
+#for i in x_vals:
 #    time1 = time.clock()
-#    getStaticHilbertTree(faces, 2)
+#    getStaticHilbertTree(faces[:i], 2)
 #    time2 = time.clock()
 #    print '%s function took %0.3f ticks' % ("Intersection", (time2-time1))
-#    times.append((time2-time1))
-#data.append(times)
-#times = []
-#for i in range(0, 3):
-#    time1 = time.clock()
-#    getRTree(faces)
-#    time2 = time.clock()
-#    print '%s function took %0.3f ticks' % ("Intersection", (time2-time1))
-#    times.append((time2-time1))
-#data.append(times)
+#    data1.append((time2-time1))
 
-#f, ax = plt.subplots()
-#labels = ["Static Hilbert Tree"] 
-#ax.boxplot(data, labels=labels)
-#ax.set_ylabel('Time (Microseconds, CPU Time)')
-#title = 'Tree Creation (N=13000)'
-#ax.set_title(title)
+for i in x_vals:
+    time1 = time.time()
+    getRTree(faces[:i])
+    time2 = time.time()
+    print '%s function took %0.3f ticks' % ("Intersection", (time2-time1))
+    data2.append((time2-time1))
 
-#pylab.savefig(title+'.png')
-#plt.show()
-#sys.exit()
+f, ax = plt.subplots()
+ax.set_ylabel('Time (Microseconds, CPU Time)')
+ax.set_xlabel('Number of Entries')
+title = 'Tree Creation Time vs Size (R Tree)'
+ax.set_title(title)
+
+# red dashes, blue squares
+#ax.plot(x_vals, data1, 'rs--', x_vals, data2, 'bs--')
+ax.plot(x_vals, data2, 'bs--')
+red_patch = mpatches.Patch(color='red', label='Static Hilbert Tree')
+blue_patch = mpatches.Patch(color='blue', label='R Tree')
+ax.legend(handles=[red_patch, blue_patch])
+
+pylab.savefig(title+'.png')
+plt.show()
+sys.exit()
 
 
-#trees = {"static":getStaticHilbertTree(faces, 2), "regular":getRTree(faces)}
-trees = {"static":getStaticHilbertTree(faces, 2)}
+trees = {"static":getStaticHilbertTree(faces, 2), "regular":getRTree(faces)}
+#trees = {"static":getStaticHilbertTree(faces, 2)}
 # There doesnt seem to be a rangeSearch for regular R-Trees http://toblerity.org/rtree/class.html
 functions = ["nearest", "intersection", "rangeSearch"]
 k = 5
@@ -94,6 +101,7 @@ args = {"nearest_list":[k], "regular_nearest_dict":{"objects":"raw"}, "intersect
 data = [] 
 f, ax = plt.subplots()
 for tree_type, tree in trees.iteritems():
+    print tree_type
     function = "rangeSearch"
     l_key = function + "_list"
     d_key = tree_type + "_" + function + "_dict"  
@@ -111,25 +119,28 @@ for tree_type, tree in trees.iteritems():
         rand_int = random.randint(0, len(faces)-1)
         randFace = list(faces[rand_int])
 
-        #rand_int2 = random.randint(0, len(faces)-1)
-        #randFace2 = list(faces[rand_int])
+        rand_int2 = random.randint(0, len(faces)-1)
+        randFace2 = list(faces[rand_int])
 
         old_length = len (randFace)
         time1 = time.clock()
-        #new_l = [[randFace]+ [randFace2]] + l
-        new_l = [randFace] + l
+        if tree_type == "regular":
+            new_l = [randFace, randFace2] + l
+        else:
+            new_l = [[randFace]+ [randFace2]] + l
+        #new_l = [randFace] + l
         func(*new_l, **d)
         time2 = time.clock()
-        print '%s function took %0.3f ticks' % ("Intersection", (time2-time1))
+        print '%s function took %0.3f ticks' % (function, (time2-time1))
         times.append((time2-time1))
         new_length = len(randFace)
     data.append(times)
 
-#labels = ["Static Hilbert Tree", "R Tree"] 
-labels = ["Static Hilbert Tree"] 
+labels = ["Static Hilbert Tree", "R Tree"] 
+#labels = ["Static Hilbert Tree"] 
 ax.boxplot(data, labels=labels)
 ax.set_ylabel('Time (Microseconds, CPU Time)')
-title = 'Range Search (N=13000)'
+title = 'Range Search (N=2000)'
 ax.set_title(title)
 
 pylab.savefig(title+'.png')
