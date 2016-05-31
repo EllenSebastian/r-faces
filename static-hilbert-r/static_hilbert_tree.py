@@ -136,11 +136,8 @@ class StaticHilbertR(object):
 				for child in element.children:
 					q.put((mindist(point, child.msr), child))
 			else: # element is a (ll, ur)
-				if (not q.empty()) and (q.queue[0][0] < curdist):
-					q.put((curdist, elem))
-				else:
-					result.append(element)
-					if len(result) >= k: return result
+				result.append(element)
+				if len(result) >= k: return result
     
 	#prints trees of height 2 or 3 best
 	def printTree(self):
