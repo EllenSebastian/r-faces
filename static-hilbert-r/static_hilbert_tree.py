@@ -138,6 +138,7 @@ class StaticHilbertR(object):
 			else: # element is a (ll, ur)
 				result.append(element)
 				if len(result) >= k: return result
+		return result
     
 	#prints trees of height 2 or 3 best
 	def printTree(self):
